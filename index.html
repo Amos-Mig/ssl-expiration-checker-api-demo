@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<link rel='canonical' href='https://amos-mig.github.io/ssl-expiration-checker-api-demo/'>
+<title>SSL Expiration Checker — live demo</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#0b0d12;color:#e8eaf0;font:16px/1.55 system-ui,sans-serif}
+a{color:#f59e0b}
+.wrap{max-width:980px;margin:0 auto;padding:0 18px}
+.banner{background:#f59e0b;color:#0b0d12;text-align:center;padding:8px 14px;font-size:13.5px;font-weight:600}
+header{padding:42px 0 22px;text-align:center}
+h1{font-size:clamp(26px,5vw,40px);letter-spacing:-.5px}
+h1 b{color:#f59e0b}
+.sub{color:#9aa3b2;max-width:660px;margin:10px auto 0;font-size:15.5px}
+.panel{background:#14171f;border:1px solid #262b36;border-radius:10px;overflow:hidden}
+.bar{display:flex;gap:6px;align-items:center;padding:10px 14px;border-bottom:1px solid #262b36}
+.dot{width:10px;height:10px;border-radius:50%;background:#262b36}
+.bar i{margin-left:8px;color:#9aa3b2;font:12px ui-monospace,Menlo,monospace;font-style:normal}
+.controls{padding:14px;border-bottom:1px solid #262b36;display:grid;gap:10px}
+textarea{width:100%;background:#0b0d12;border:1px solid #262b36;border-radius:6px;color:#e8eaf0;font:13px/1.6 ui-monospace,Menlo,monospace;padding:10px;min-height:96px;resize:vertical}
+textarea:focus,input:focus{outline:1px solid #f59e0b}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label{color:#9aa3b2;font-size:13px}
+input[type=number]{width:72px;background:#0b0d12;border:1px solid #262b36;border-radius:6px;color:#e8eaf0;padding:6px 8px;font:13px ui-monospace,Menlo,monospace}
+button{background:#f59e0b;color:#0b0d12;border:0;border-radius:6px;padding:9px 18px;font-weight:700;font-size:14px;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+.ghost{background:transparent;color:#9aa3b2;border:1px solid #262b36;font-weight:500;padding:6px 10px;font-size:12px}
+.ghost:hover{color:#e8eaf0;border-color:#f59e0b}
+.term{padding:14px;font:13px/1.75 ui-monospace,Menlo,monospace;min-height:230px}
+.cmd{white-space:pre-wrap;word-break:break-all}
+.dim{color:#9aa3b2}
+.ok{color:#10b981}.warn{color:#f59e0b}.bad{color:#ef4444}
+.rrow{display:flex;gap:10px}
+.rrow .h{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .st{width:92px;font-weight:700}
+.rrow .dy{width:118px}
+.rrow .is{width:225px;color:#9aa3b2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim{padding:10px 14px;border-top:1px solid #262b36;color:#9aa3b2;font-size:12px}
+h2{font-size:20px;margin:44px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:#14171f;border:1px solid #262b36;border-radius:10px;padding:16px}
+.card h3{font-size:15px;margin-bottom:6px}
+.card p{color:#9aa3b2;font-size:13.5px}
+.live{border-left:3px solid #10b981}
+.tag{font-size:10.5px;color:#10b981;letter-spacing:1px;display:block;margin-bottom:4px}
+.locked{border-style:dashed;opacity:.8}
+.snippet{background:#14171f;border:1px solid #262b36;border-radius:10px;padding:16px;font:13px/1.8 ui-monospace,Menlo,monospace;overflow-x:auto;white-space:pre;color:#e8eaf0}
+.snippet .c{color:#5b6472}
+.cta{text-align:center;margin:38px 0 8px}
+.cta a{display:inline-block;background:#f59e0b;color:#0b0d12;text-decoration:none;font-weight:700;padding:13px 30px;border-radius:8px;font-size:16px}
+.cta i{display:block;color:#9aa3b2;font-size:12px;margin-top:10px;font-style:normal}
+footer{border-top:1px solid #262b36;margin-top:46px;padding:20px 0;color:#9aa3b2;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:640px){.rrow .is{display:none}.rrow .dy{width:96px}}
+</style>
+</head>
+<body>
+<div class='banner'>Live demo — simulated checks on sample domains only. The full script scans your real domain list, cron-ready ↓</div>
+<header class='wrap'>
+<h1>SSL <b>Expiration</b> Checker</h1>
+<p class='sub'>Bulk-checks TLS certificates across your entire domain list and alerts before they expire — because “the site is down” at 9am is almost always a certificate a script would have caught.</p>
+</header>
+<main class='wrap'>
+<div class='panel'>
+<div class='bar'><span class='dot'></span><span class='dot'></span><span class='dot'></span><i>sslcheck — simulated run</i></div>
+<div class='controls'>
+<textarea id='hosts' spellcheck='false'>example.com
+github.com
+expired.badssl.com
+wrong.host.badssl.com
+api.acme.dev
+mail.oldcorp.io</textarea>
+<div class='row'>
+<button id='run'>▶ Run check</button>
+<label>warn at ≤ <input id='warn' type='number' value='14' min='1' max='90'> days</label>
+<span style='flex:1'></span>
+<button class='ghost' data-add='self-signed.badssl.com'>+ self-signed</button>
+<button class='ghost' data-add='incomplete-chain.badssl.com'>+ chain issue</button>
+<button class='ghost' data-add='checkout.shop.io'>+ fresh domain</button>
+</div>
+</div>
+<div class='term' id='term'></div>
+<div class='sim'>⚠ Simulated response — results are generated in your browser. The real script performs live TLS handshakes against your actual servers.</div>
+</div>
+<h2>What's inside</h2>
+<div class='grid'>
+<div class='card live'><h3><span class='tag'>LIVE ABOVE</span>Bulk domain checks</h3><p>One line per host: days-until-expiry, issuing CA, handshake latency. Paste your own list and run it.</p></div>
+<div class='card live'><h3><span class='tag'>LIVE ABOVE</span>Configurable thresholds</h3><p>--warn 14 flags anything under 14 days. Change the number and re-run — statuses re-classify instantly.</p></div>
+<div class='card live'><h3><span class='tag'>LIVE ABOVE</span>Cron-ready exit codes</h3><p>0 = healthy, 1 = warning, 2 = critical. Schedule it blindly — no output parsing needed.</p></div>
+<div class='card locked'><h3>🔒 Chain &amp; hostname validation</h3><p>Full intermediate-chain verification, SNI matching and self-signed detection on every host — in the full script.</p></div>
+<div class='card locked'><h3>🔒 Alert integrations</h3><p>Slack, SMTP and webhook alerts on state change, plus JSON/CSV reports and per-port checks — in the full kit.</p></div>
+</div>
+<h2>The real thing</h2>
+<div class='snippet'><span class='c'># excerpt — sslcheck.py: single Python file, stdlib only, no agents</span>
+$ python sslcheck.py domains.txt --warn 14 --format table
+<span class='ok'>example.com     OK        67 days   Let's Encrypt R3</span>
+<span class='warn'>api.acme.dev    WARN       9 days   Sectigo RSA DV    ← renew this week</span>
+<span class='bad'>old.acme.io     EXPIRED   -12 days  ✗ expired 12d ago</span>
+<span class='dim'>6 checked · 1.4s · exit code</span> <span class='bad'>2</span>
+
+<span class='c'># the full script adds: chain + SNI validation, --alert slack|smtp|webhook,
+# --format json|csv, per-port checks, state files so cron only alerts on change</span>
+<span class='warn'>0 4 * * *</span> /usr/local/bin/sslcheck.py ~/domains.txt --warn 14 --alert smtp</div>
+<div class='cta'><a href='https://amosmign.gumroad.com/l/ssl-expiration-checker-api'>Get the full script · 29</a><i>Python 3.7+ · runs anywhere · unlimited domains</i></div>
+</main>
+<footer class='wrap'><span>SSL Expiration Checker</span><span><a href='https://kits.amosmignery.dev'>kits.amosmignery.dev</a> · <a href='https://github.com/Amos-Mig/ssl-expiration-checker-api-demo'>GitHub</a></span></footer>
+<script>
+var T=document.getElementById('term'),H=document.getElementById('hosts'),W=document.getElementById('warn'),B=document.getElementById('run');
+var ISS=['Let’s Encrypt R3','DigiCert TLS RSA SHA256','Sectigo RSA DV','Google Trust Services WE1','Amazon RSA 2048 M02','Go Daddy Secure CA'];
+var FIX={'api.acme.dev':9,'mail.oldcorp.io':41};
+function hash(s){var h=7;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+function rn(s,a,b){return a+hash(s)%(b-a+1)}
+function line(c,t){var d=document.createElement('div');d.className=c;d.textContent=t;T.appendChild(d);return d}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function probe(h,w){
+ var low=h.toLowerCase(),i=ISS[hash(h)%ISS.length],ms=rn(h,35,420);
+ if(low.indexOf('expired')>-1)return{st:'EXPIRED',cl:'bad',d:-rn(h,3,30),is:i,ms:ms};
+ if(/wrong\.host|mismatch/.test(low))return{st:'MISMATCH',cl:'bad',d:rn(h,20,200),is:'CN does not match host',ms:ms};
+ if(low.indexOf('chain')>-1)return{st:'CHAIN-ERR',cl:'bad',d:rn(h,10,120),is:'incomplete chain',ms:ms};
+ if(/self.?signed/.test(low))return{st:'SELF-SIGN',cl:'bad',d:rn(h,5,90),is:'self-signed',ms:ms};
+ var d=FIX[low]!==undefined?FIX[low]:rn(h,2,397);
+ return d<=w?{st:'WARN',cl:'warn',d:d,is:i,ms:ms}:{st:'OK',cl:'ok',d:d,is:i,ms:ms};
+}
+function row(r){
+ var d=document.createElement('div');d.className='rrow';
+ var a=document.createElement('span');a.className='h';a.textContent=r.h;
+ var b=document.createElement('span');b.className='st '+r.cl;b.textContent=r.st;
+ var c=document.createElement('span');c.className='dy '+(r.d<0?'bad':'dim');c.textContent=r.d<0?'expired '+(-r.d)+'d ago':r.d+' days';
+ var e=document.createElement('span');e.className='is';e.textContent=r.is+' · '+r.ms+'ms';
+ d.appendChild(a);d.appendChild(b);d.appendChild(c);d.appendChild(e);T.appendChild(d);
+}
+var busy=false;
+async function run(){
+ if(busy)return;busy=true;B.disabled=true;
+ var w=Math.min(90,Math.max(1,parseInt(W.value,10)||14));
+ var hosts=H.value.split(/[\s,]+/).map(function(s){return s.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'')}).filter(Boolean);
+ hosts=hosts.filter(function(v,i){return hosts.indexOf(v)===i});
+ T.innerHTML='';
+ var cmd=line('cmd',''),str='$ python sslcheck.py domains.txt --warn '+w;
+ for(var i=0;i<str.length;i++){cmd.textContent+=str[i];await sleep(11)}
+ if(hosts.length>12){await sleep(150);line('dim','! demo caps at 12 hosts — the full script has no limit');hosts=hosts.slice(0,12)}
+ if(!hosts.length){line('bad','no domains given — paste at least one above');busy=false;B.disabled=false;return}
+ await sleep(200);
+ line('dim','resolving '+hosts.length+' hostnames… performing TLS handshakes');
+ await sleep(300+Math.random()*250);
+ var ok=0,wa=0,bd=0,t0=Date.now();
+ for(var j=0;j<hosts.length;j++){
+  var r=probe(hosts[j],w);r.h=hosts[j];
+  if(r.cl==='ok')ok++;else if(r.cl==='warn')wa++;else bd++;
+  await sleep(70+Math.random()*150);
+  row(r);
+ }
+ var code=bd?2:(wa?1:0);
+ await sleep(220);
+ line('dim',hosts.length+' checked · '+ok+' ok · '+wa+' warn · '+bd+' failed · '+((Date.now()-t0)/1000).toFixed(1)+'s');
+ var ex=line(code?'bad':'ok','exit code '+code+(code===0?' ✓ all clear':''));
+ ex.style.fontWeight='700';
+ busy=false;B.disabled=false;
+}
+B.onclick=run;
+W.addEventListener('keydown',function(e){if(e.key==='Enter')run()});
+[].forEach.call(document.querySelectorAll('[data-add]'),function(b){
+ b.onclick=function(){var v=b.getAttribute('data-add'),L=H.value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+ if(L.indexOf(v)<0)L.push(v);H.value=L.join('\n');};
+});
+run();
+</script>
+</body>
+</html>
